@@ -6988,3 +6988,227 @@ M=`grep -m 1 '^code' $DUMP | sed "s/code: //"`
 ```
 
  + [erl_crashdump_analyzer.sh](https://github.com/ferd/recon/blob/master/script/erl_crashdump_analyzer.sh)
+
+# json
+
+using [jsone](https://hex.pm/packages/jsone) example
+o
+
+## preparation
+
+```shell
+cd code
+rebar3 new release json_example
+cd json_example
+```
+
+add jsone dependency to `rebar.config`.
+
+```erlang
+{erl_opts, [debug_info]}.
+{deps, [
+  {jsone, "1.5.6"}
+]}.
+% snip
+```
+
+add library
+
+```erlang
+rebar3 upgrade
+```
+
+## basics
+
+basics decode and encode sample.
+
+<details><summary>json_example_app.erl</summary>
+
+```erlang
+using_jsone() ->
+    ?DEBUG("using_jsone/0"),
+    ?INFO("-----------------------------------"),
+    ?INFO("using_jsone: json decode"),
+    ?INFO("using_jsone: array ~w", [jsone:decode(<<"[1, 2, 3]">>)]),
+    ?INFO("using_jsone: key, value ~w", [jsone:decode(<<"{\"key\": \"value\"}">>)]),
+    key,
+    ?INFO("using_jsone: attempt atom ~w", [
+      jsone:decode(
+        <<"{\"key\": \"value\"}">>,
+        [{keys, attempt_atom}])
+    ]),
+    ?INFO(
+      "using_jsone: tuple format ~w", 
+      [
+        jsone:decode(
+          <<"{\"key\": \"value\"}">>, 
+          [{object_format, tuple}])]),
+    ?INFO(
+      "using_jsone: proplist format ~w", 
+      [
+        jsone:decode(
+          <<"{\"key\": \"value\"}">>, 
+          [{object_format, proplist}])]),
+    ?INFO(
+      "using_jsone: try succeed ~w", 
+      [
+        jsone:try_decode(
+          <<"[1,1,2]">>)
+      ]),
+    ?INFO(
+      "using_jsone: try failure ~w", 
+      [
+        jsone:try_decode(
+          <<"{[1,1,2] \"undefined\" }">>)
+      ]),
+    ?INFO("-----------------------------------"),
+    ?INFO("using_jsone: json encode"),
+    ?INFO("using_jsone: array ~w", [jsone:encode([1,2,3])]),
+    ?INFO("using_jsone: map ~w", [jsone:encode(#{<<"key">> => <<"value">>})]),
+    ?INFO("using_jsone: tuple ~w", [jsone:encode({[{<<"key">>, <<"value">>}]})]),
+    ?INFO("using_jsone: proplist ~w", [jsone:encode([{<<"key">>, <<"value">>}])]),
+    ?INFO("using_jsone: atom key ~w", [jsone:encode(#{key => <<"value">>})]),
+    ?INFO(
+      "using_jsone: try succeed ~w", 
+      [
+        jsone:try_encode(#{<<"key">> => <<"value">>})
+      ]),
+    ?INFO(
+      "using_jsone: try failure ~w", 
+      [
+        jsone:try_encode(#{1234 => <<"value">>})
+      ]),
+    %%     ?INFO("using_jsone: non string key ~w", [
+    %%       jsone:encode(
+    %%         {[{123 => <<"value">>}]},
+    %%         [{object_key_type, scalar}])
+    %%     ]),
+    ?INFO("using_jsone: undefined to null ~w", [
+      jsone:encode(undefined, 
+      [undefined_as_null])
+    ]),
+    Data = [
+      true, 
+      #{
+        <<"1">> => 2, 
+        <<"array">> => [
+          [[[1]]], 
+          #{<<"ab">> => <<"cd">>}, 
+          [], 
+          #{}, 
+          false
+        ]
+      }, 
+      null
+    ],
+    ?INFO("using_jsone: pritty print ~w", [
+      jsone:encode(Data, 
+      [{indent, 2}, {space, 1}])
+    ]),
+    ?INFO("using_jsone: integer ~w", [
+      jsone:encode(1)
+    ]),
+    ?INFO("using_jsone: float ~w", [
+      jsone:encode(1.23)
+    ]),
+    ?INFO("using_jsone: decimal format ~w", [
+      jsone:encode(1.23, [{float_format, [{decimals, 4}]}])
+    ]),
+    ?INFO("using_jsone: decimal compact format ~w", [
+      jsone:encode(1.23, [{float_format, [{decimals, 4}, compact]}])
+    ]),
+    ?INFO("-----------------------------------"),
+    ?INFO("using_jsone: json encode and decode"),
+    DecResult = jsone:decode(<<"{\"key\": \"value\"}">>),
+    ?INFO("using_jsone: encode json after decode ~w", [
+      jsone:encode(DecResult)
+    ]).
+```
+
+</details>
+
+test
+
+```shell
+rebar3 shell
+```
+
+## japanese
+
+encode and decode sample using japanese.
+
+<details><summary>json_example_app.erl</summary>
+
+```erlang
+using_jsone_japanese() ->
+    ?DEBUG("using_jsone_japanese/0"),
+    ?INFO("-----------------------------------"),
+    ?INFO("using_jsone_japanese: json decode"),
+    ?INFO("using_jsone_japanese: key, value japanese ~w", [
+      jsone:try_decode(
+        <<"{\"家事指示\": \"洗濯物\"}">>,
+        [{allow_ctrl_chars, true}]
+      )
+    ]),
+    ?INFO("using_jsone_japanese: tuple format japanese ~w", [
+      jsone:try_decode(
+        <<"{\"家事指示\": \"洗濯物\"}">>,
+        [
+          {object_format, tuple},
+          {allow_ctrl_chars, true}
+        ]
+      )
+    ]),
+    ?INFO("using_jsone_japanese: proplist format japanese ~w", [
+      jsone:try_decode(
+        <<"{\"家事指示\": \"洗濯物\"}">>,
+        [
+          {object_format, proplist},
+          {allow_ctrl_chars, true}
+        ]
+      )
+    ]),
+    ?INFO("-----------------------------------"),
+    ?INFO("using_jsone_japanese: json encode"),
+    ?INFO("using_jsone_japanese: map japanese ~w", [
+      jsone:try_encode(
+        #{<<"家事指示"/utf8>> => <<"洗濯物"/utf8>>}
+      )
+    ]),
+    ?INFO("using_jsone_japanese: map japanese with option~w", [
+      jsone:try_encode(
+        #{<<"家事指示"/utf8>> => <<"洗濯物"/utf8>>},
+        [native_utf8, native_forward_slash]
+      )
+    ]),
+    ?INFO("using_jsone_japanese: tuple japanese ~w", [
+      jsone:try_encode(
+        {[{<<"家事指示"/utf8>>, <<"洗濯物"/utf8>>}]}
+      )
+    ]),
+    ?INFO("using_jsone_japanese: proplist japanese ~w", [
+      jsone:try_encode(
+        [{<<"家事指示"/utf8>>, <<"洗濯物"/utf8>>}]
+      )
+    ]),
+    ?INFO("-----------------------------------"),
+    ?INFO("using_jsone_japanese: json encode and decode"),
+    case jsone:try_decode(
+        <<"{\"家事指示\": \"洗濯物\"}"/utf8>>) of
+        {ok, DecResult, _} ->
+        ?INFO("using_jsone_japanese: encode after decode ~w", [
+          jsone:try_encode(
+            DecResult,
+            [native_forward_slash])]);
+        {error, ErrResult} ->
+          ?INFO("decode error ~w", [ErrResult])
+    end.
+```
+
+</details>
+
+test
+
+```shell
+rebar3 shell
+```
