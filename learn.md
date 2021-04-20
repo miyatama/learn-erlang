@@ -288,20 +288,26 @@ http://erlang.org/doc/man/erlang.html
 
 ## Binary
 
-```erlang
-<<5, 10, 20>>.
-<<"hello">>.
-Bin1 = <<1, 2, 3>>.
-Bin2 = <<4, 5>>.
-Bin3 = <<6>>.
-list_to_binary([Bin1, 1, [2, 3, Bin2], 4|Bin3]).
-```
- + @spec split_binary(Bin, Pos) -> (Bin1, Bin2).
- + @spec term_to_binary(Term) -> Bin
- + @spec binary_to_term(Bin) -> Term
- + @spec size(Bin)- > Int
+define
 
-## Bit Control
+ + Ei = Value | Value:Size | Value/TypeSpecifierList | Value:Size/TypeSpecifierList |
+ + TypeSpecifierList = End-Sign-Type-Unit
+ + End = big | little | native
+ + Sign = signed | unsigned
+ + Type = integer | float | binary
+ + Unit = unit:1 | 2 | ... | 255
+
+```erlang
+% 8bit integer.value is 1.
+<<1>>.
+% value:size(bit).
+<<2:8>>.
+% when 16 bit size, split 8 bit
+<<2:16>>.
+```
+
+gengerate and parse
+
 
 ```erlang
 M = <<X:3, Y:7, Z:6>>.
@@ -315,16 +321,44 @@ G1.
 B1.
 ```
 
-Ei = Value |
-     Value:Size |
-     Value/TypeSpecifierList |
-     Value:Size/TypeSpecifierList |
+using list
 
-TypeSpecifierList = End-Sign-Type-Unit
-End = big | little | native
-Sign = signed | unsigned
-Type = integer | float | binary
-Unit = unit:1 | 2 | ... | 255
+```erlang
+<<5, 10, 20>>.
+<<"hello">>.
+Bin1 = <<1, 2, 3>>.
+Bin2 = <<4, 5>>.
+Bin3 = <<6>>.
+list_to_binary([Bin1, 1, [2, 3, Bin2], 4|Bin3]).
+```
+
+ + @spec split_binary(Bin, Pos) -> (Bin1, Bin2).
+ + @spec term_to_binary(Term) -> Bin
+ + @spec binary_to_term(Bin) -> Term
+ + @spec size(Bin)- > Int
+
+## Bit Control
+
+bit control not use bit string
+
+ + band: and
+ + bor: or
+ + bxor: xor
+ + bnot: not
+ + bsl: left shift
+ + bsr: right shift
+
+```erlang
+5 band 3.
+5 bor 3.
+bnot 0.
+bnot 1.
+bnot 2.
+% 8 bit right shift
+256 bsr 8.
+% 8 bit left shift
+1 bsl 8.
+```
 
 ## find MPEG sync frame
 
