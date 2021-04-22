@@ -290,6 +290,12 @@ http://erlang.org/doc/man/erlang.html
 
 define
 
+```erlang
+<<Ei>>
+% or
+<<Ei, ..., Ei>>
+```
+
  + Ei = Value | Value:Size | Value/TypeSpecifierList | Value:Size/TypeSpecifierList |
  + TypeSpecifierList = End-Sign-Type-Unit
  + End = big | little | native
@@ -298,12 +304,50 @@ define
  + Unit = unit:1 | 2 | ... | 255
 
 ```erlang
-% 8bit integer.value is 1.
-<<1>>.
-% value:size(bit).
-<<2:8>>.
-% when 16 bit size, split 8 bit
-<<2:16>>.
+% 8bit integer value
+<<128>>.
+% 8bit integer value with bit size
+<<128:8>>
+% 8bit integer value with bit size and TypeSpecifierList
+<<128:1/big-unsigned-integer-unit:8>>.
+% 8 item 8bit integer value with bit size and typeSpecifierList
+<<128:8/big-unsigned-integer-unit:8>>.
+```
+
+think about a bit.
+
+| binary | define |
+| :----- | :---- |
+| 0001 | `<<1>>.` |
+| 1010 | `<<10>>.` |
+| 1111 | `<<15>>.` |
+
+```erlang
+Bin1 = <<1>>.
+io:format("<<~s>>~n", [[io_lib:format("~2.16.0B",[X]) || <<X:8>> <= Bin1 ]]).
+Bin2 = <<10>>.
+io:format("<<~s>>~n", [[io_lib:format("~2.16.0B",[X]) || <<X:8>> <= Bin2 ]]).
+Bin3 = <<15>>.
+io:format("<<~s>>~n", [[io_lib:format("~2.16.0B",[X]) || <<X:8>> <= Bin3 ]]).
+```
+two byte.
+
+| binary | define |
+| :----- | :---- |
+| 0x0010 | `<<16:2/big-unsigned-integer-unit:8>>` |
+| 0x00A1 | `<<161:2/big-unsigned-integer-unit:8>>` |
+| 0x00FF | `<<255:2/big-unsigned-integer-unit:8>>` |
+| 0xFFFF | `<<255:1/big-unsigned-integer-unit:8, 255:1/big-unsigned-integer-unit:8>>` |
+
+```erlang
+Bin1 = <<16:2/big-unsigned-integer-unit:8>>.
+io:format("<<~s>>~n", [[io_lib:format("~2.16.0B",[X]) || <<X:8>> <= Bin1 ]]).
+Bin2 = <<161:2/big-unsigned-integer-unit:8>>.
+io:format("<<~s>>~n", [[io_lib:format("~2.16.0B",[X]) || <<X:8>> <= Bin2 ]]).
+Bin3 = <<255:2/big-unsigned-integer-unit:8>>.
+io:format("<<~s>>~n", [[io_lib:format("~2.16.0B",[X]) || <<X:8>> <= Bin3 ]]).
+Bin4 = <<255:1/big-unsigned-integer-unit:8, 255:1/big-unsigned-integer-unit:8>>.
+io:format("<<~s>>~n", [[io_lib:format("~2.16.0B",[X]) || <<X:8>> <= Bin4 ]]).
 ```
 
 gengerate and parse
